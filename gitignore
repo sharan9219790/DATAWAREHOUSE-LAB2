@@ -1,0 +1,69 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+*.pdb
+*.pkl
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+*/.python-version
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Secrets / local config
+.env
+.env.*
+*.local
+*.secret
+*.secrets
+
+# ===== Airflow =====
+# If AIRFLOW_HOME is inside the repo:
+airflow/airflow.db
+airflow/unittests.cfg
+airflow/logs/
+airflow/*.pid
+airflow/*.err
+airflow/*.out
+airflow/*.log
+
+# DAG cache/compiled
+airflow/dags/__pycache__/
+dags/__pycache__/
+
+# ===== dbt =====
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+manifest.json
+run_results.json
+
+# ===== Superset (optional) =====
+superset_home/
+superset.db
+superset/*.log
+
+# Reports / artifacts
+report/*.tmp
+report/~$*.docx
+
+# Node / frontend (just in case)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

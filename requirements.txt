@@ -1,0 +1,23 @@
+# ====== Core runtime ======
+# Airflow recommends installing with constraints:
+#   pip install "apache-airflow==2.9.3" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.10.txt"
+apache-airflow==2.9.3
+
+# dbt + Snowflake
+dbt-core==1.8.9
+dbt-snowflake==1.8.4
+
+# Snowflake connectivity
+snowflake-connector-python==3.18.0
+snowflake-sqlalchemy==1.7.7
+SQLAlchemy<2.0,>=1.4.49
+
+# Data wrangling
+pandas==1.5.3
+numpy==1.23.5
+
+# Finance data for ingestion DAG
+yfinance==0.2.52
+
+# Logging / utils (optional but handy)
+python-dotenv==1.0.1
