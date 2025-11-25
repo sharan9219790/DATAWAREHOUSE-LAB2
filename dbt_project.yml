@@ -1,0 +1,27 @@
+name: "lab2_stocks"
+version: "1.0"
+profile: "lab2_snowflake"
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  lab2_stocks:
+    +materialized: view
+
+    # Staging models read the raw table; keep them in RAW schema
+    staging:
+      +schema: RAW
+      +materialized: view
+
+    # Intermediate + marts live in ANALYTICS schema
+    intermediate:
+      +schema: ANALYTICS
+      +materialized: view
+
+    marts:
+      +schema: ANALYTICS
+      +materialized: table
+
