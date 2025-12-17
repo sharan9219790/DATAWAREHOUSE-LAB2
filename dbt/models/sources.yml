@@ -1,0 +1,7 @@
+sources:
+  - name: raw
+    database: USER_DB_COYOTE
+    schema: PUBLIC            # or RAW if you chose that path
+    tables:
+      - name: STOCK_PRICES
+
