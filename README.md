@@ -1,202 +1,159 @@
-# **Lab 2 — DATA226**
-*(Airflow → Snowflake → dbt → Superset)*
+# **Santa Clara Crash Analytics Pipeline — DATA226 - Group Project **
+*(Airflow → Snowflake → dbt → Tableau)*
 
 ## 📘 Overview
-This project implements a complete, production-oriented **ELT (Extract–Load–Transform) data pipeline** designed to automate daily stock analytics using modern data engineering tools.
+This project implements a production-oriented ELT (Extract–Load–Transform) pipeline for analyzing Santa Clara County traffic accident data.
 
-The pipeline performs:
-
-1. **Extraction** — Fetch daily stock data from Yahoo Finance (`yfinance`)
-2. **Loading** — Store raw stock data in the **Snowflake RAW schema**
-3. **Transformation** — Clean, structure, and enrich data using **dbt**
-4. **Visualization** — Build analytic dashboards using **Apache Superset**
-
-This lab demonstrates enterprise-level orchestration, warehousing, transformation modeling, and BI integration.
+Pipeline steps:
+1. Extraction — crash CSV + real-time weather + traffic API data  
+2. Loading — raw data stored in Snowflake RAW schema  
+3. Transformation — dbt models (staging → intermediate → marts)  
+4. Visualization — Tableau dashboards for hotspots, trends, and risk analysis  
 
 ---
 
 ## 🧱 Architecture Diagram
-*(GitHub-native Mermaid)*
 
-```mermaid
+To include the Mermaid diagram, paste the following into GitHub:
+
+\`\`\`mermaid
 flowchart LR
-    YF[yfinance API] --> A[Airflow\nETL DAG]
-    A --> SF_RAW[Snowflake\nRAW Schema]
-    SF_RAW --> DBT[dbt Models\nStaging → Intermediate → Marts]
-    DBT --> SF_ANALYTICS[Snowflake\nANALYTICS Schema]
-    SF_ANALYTICS --> SUP[Apache Superset]
-    SUP --> DASH[Dashboards & Insights]
-```
+    CSV[Historical Crash Data\n(CSV)] --> A[Airflow Ingestion DAGs]
+    WEATHER[OpenWeather API] --> A
+    TRAFFIC[Google Distance Matrix API] --> A
+    A --> RAW[Snowflake RAW Schema]
+    RAW --> DBT[dbt Models: Staging → Intermediate → Marts]
+    DBT --> MART[Snowflake MART Schema]
+    MART --> TABLEAU[Tableau Dashboards]
+    TABLEAU --> INSIGHTS[Risk Hotspots\nWeather Impact\nCrash Forecasts]
+\`\`\`
 
 ---
 
 ## 📁 Repository Structure
 
-```
+\`\`\`
 .
-├── dags/
-│   ├── etl_stock_raw_dag.py        # Extract + Load DAG
-│   └── dbt_run_dag.py              # dbt run DAG
-├── dbt/
-│   ├── dbt_project.yml
-│   ├── profiles.yml
-│   └── models/
-│       ├── staging/
-│       ├── intermediate/
-│       └── marts/
-├── requirements.txt
+├── dags/                         # Airflow DAGs for ingestion + dbt
+├── data/                         # Historical accident dataset(s)
+├── tableau/                      # Tableau dashboards / screenshots
+├── compose.yaml                  # Docker Compose for Airflow
 └── README.md
-```
+\`\`\`
 
 ---
 
 ## 🔧 Prerequisites
-
-- Python **3.10**  
-- Snowflake account (with appropriate role/warehouse access)  
-- Apache Airflow **2.9.x**  
-- dbt-core + dbt-snowflake  
-- Superset (recommended in a separate venv)  
-- All secrets must be supplied via **environment variables**  
+- Python 3.10+
+- Docker + Docker Compose
+- Snowflake account
+- dbt-core + dbt-snowflake
+- Tableau Desktop / Public
+- API keys: OpenWeatherMap + Google Distance Matrix
 
 ---
 
-## 🔐 Required Environment Variables
+## 🔐 Environment Variables
 
-```
+\`\`\`
 export SNOWFLAKE_ACCOUNT="<account>"
 export SNOWFLAKE_USER="<user>"
 export SNOWFLAKE_PASSWORD="<password>"
-export SNOWFLAKE_ROLE="TRAINING_ROLE"
+export SNOWFLAKE_ROLE="DATA226_ROLE"
 export SNOWFLAKE_WAREHOUSE="COMPUTE_WH"
-export SNOWFLAKE_DATABASE="USER_DB"
+export SNOWFLAKE_DATABASE="ACCIDENT_DW"
 export SNOWFLAKE_SCHEMA="RAW"
+
+export OPENWEATHER_API_KEY="<weather_key>"
+export GOOGLE_DISTANCE_MATRIX_API_KEY="<maps_key>"
 
 export DBT_PROFILES_DIR="$(pwd)/dbt"
 export AIRFLOW_HOME="$(pwd)/.airflow"
-```
+\`\\"\`
 
 ---
 
-## 🌀 Airflow Configuration
+## 🌀 Airflow Setup
 
-### **1. Initialize Airflow**
-```bash
-airflow db init
-```
+### Start Airflow
+\`\`\`
+docker-compose -f compose.yaml up --build
+\`\`\`
 
-### **2. Create admin user**
-```bash
-airflow users create \
-  --username admin \
-  --firstname Admin \
-  --lastname User \
-  --role Admin \
-  --email admin@example.com \
-  --password admin
-```
+### Airflow Connection (snowflake_conn)
+Account  
+User  
+Password  
+Warehouse: COMPUTE_WH  
+Database: ACCIDENT_DW  
+Schema: RAW  
+Role: DATA226_ROLE  
 
-### **3. Start Airflow services**
-```bash
-airflow webserver --port 8080
-airflow scheduler
-```
-
-### **4. Configure Connections**
-Go to **Airflow UI → Admin → Connections → snowflake_default**
-
-Configure:
-
-- Account  
-- User  
-- Password  
-- Warehouse  
-- Database  
-- Schema  
-- Role  
-
-### **5. Airflow Variables**
-| Variable | Value |
-|---------|--------|
-| `snowflake_database` | USER_DB |
-| `raw_schema` | RAW |
-| `analytics_schema` | ANALYTICS |
-| `snowflake_role` | TRAINING_ROLE |
-| `stock_symbols` | ["AAPL","MSFT","GOOG"] |
-| `start_date` | 2018-01-01 |
+### Airflow Variables
+snowflake_database = ACCIDENT_DW  
+raw_schema = RAW  
+intermediate_schema = INT  
+mart_schema = MART  
+openweather_api_key = <key>  
+traffic_api_key = <key>  
 
 ---
 
 ## 📡 DAGs
 
-### **DAG 1 — `etl_stock_raw_dag`**
-- Creates database, schema, and tables if missing  
-- Pulls stock OHLCV data using `yfinance`  
-- Loads into Snowflake RAW schema  
+### ingest_crash_data
+- Load CSV → RAW schema  
+- Validate row count  
 
-### **DAG 2 — `dbt_run_dag`**
-- Runs `dbt run` to build:
-  - staging views  
-  - intermediate models (moving averages, RSI, returns)  
-  - mart table **FCT_STOCK_ANALYTICS**  
+### ingest_weather_data
+- Pull OpenWeatherMap data  
+- Store in RAW schema  
+
+### ingest_traffic_data
+- Pull Google Distance Matrix travel-time + congestion  
+
+### run_dbt_pipeline
+- dbt run + test  
+- Builds:
+  - staging  
+  - intermediate  
+  - marts  
 
 ---
 
 ## 🧱 dbt Layer
 
-Run dbt manually:
-
-```bash
-cd dbt
+Run:
+\`\`\`
 dbt debug
 dbt run
-```
+dbt test
+\`\`\`
 
-Validate in Snowflake:
-
-```sql
-SELECT COUNT(*) FROM RAW.STOCK_PRICES;
-
-SELECT * 
-FROM ANALYTICS.FCT_STOCK_ANALYTICS
-ORDER BY DATE DESC
-LIMIT 50;
-```
+Snowflake checks:
+\`\`\`
+SELECT COUNT(*) FROM RAW.CRASHES;
+SELECT * FROM MART.FACT_CRASHES LIMIT 20;
+\`\`\`
 
 ---
 
-## 📊 Superset Dashboard
+## 📊 Tableau Dashboard
 
-### Setup Superset (separate venv recommended):
+Snowflake Connection:
+- Warehouse: COMPUTE_WH  
+- Database: ACCIDENT_DW  
+- Schema: MART  
 
-```bash
-python3 -m venv superset-venv
-source superset-venv/bin/activate
-pip install apache-superset
-superset fab create-admin
-superset db upgrade
-superset init
-superset run -p 8088
-```
-
-### Connect Snowflake as a database  
-### Create datasets:  
-
-- `RAW.STOCK_PRICES`  
-- `ANALYTICS.FCT_STOCK_ANALYTICS`  
-
-### Build charts:
-
-- Line chart — Close Price
-- Moving Averages (MA20/MA50)
-- RSI indicator
-- Daily Returns (%)
-- KPI: Latest Close Price
-
-Combine into a unified **Stock Analytics Dashboard**.
+Dashboard visuals:
+- Monthly crash trends  
+- Severity category  
+- Weather × traffic control heatmap  
+- Road condition charts  
+- Geospatial hotspots  
+- Crash forecast trends  
 
 ---
 
 ## 📄 License  
-Educational use for **DATA 226** course.
-
+For academic use in DATA 226 — San José State University.
