@@ -1,6 +1,5 @@
 # Lab 2 — End‑to‑End Stock Analytics (Airflow → Snowflake → dbt → Superset)
-
-> **One‑shot README** for cloning and reproducing the project without secrets.  
+ 
 > Pipelines fetch daily prices with `yfinance`, land them in Snowflake via Airflow, transform with `dbt`, and visualize in Apache Superset.
 
 ---
