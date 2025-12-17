@@ -1,4 +1,4 @@
-# **Lab 2 — End-to-End Stock Data Analytics Pipeline**
+# **Lab 2 — DATA226**
 *(Airflow → Snowflake → dbt → Superset)*
 
 ## 📘 Overview
