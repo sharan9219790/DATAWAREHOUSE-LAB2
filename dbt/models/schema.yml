@@ -1,0 +1,32 @@
+version: 2
+
+sources:
+  - name: stocks
+    description: Raw stock price data loaded by Airflow into Snowflake
+    database: "{{ env_var('SNOWFLAKE_DATABASE', 'USER_DB_COYOTE') }}"
+    schema: "{{ env_var('SNOWFLAKE_RAW_SCHEMA', 'PUBLIC') }}"
+    tables:
+      - name: STOCK_PRICES
+        description: Daily OHLCV prices pulled from yfinance
+        columns:
+          - name: DATE
+            description: Trading day
+            tests:
+              - not_null
+          - name: OPEN
+            description: Opening price
+          - name: HIGH
+            description: Intraday high
+          - name: LOW
+            description: Intraday low
+          - name: CLOSE
+            description: Close price
+          - name: ADJ_CLOSE
+            description: Adjusted close price
+          - name: VOLUME
+            description: Shares traded
+          - name: SYMBOL
+            description: Ticker symbol
+            tests:
+              - not_null
+
