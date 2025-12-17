@@ -16,7 +16,7 @@ This lab demonstrates enterprise-level orchestration, warehousing, transformatio
 ---
 
 ## 🧱 Architecture Diagram
-*(GitHub-native Mermaid — guaranteed to render)*
+*(GitHub-native Mermaid)*
 
 ```mermaid
 flowchart LR
