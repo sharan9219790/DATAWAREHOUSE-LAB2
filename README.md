@@ -2,7 +2,7 @@
 *(Airflow → Snowflake → dbt → Superset)*
 
 ## 📘 Overview
-This project implements a complete, production-oriented **ELT (Extract–Load–Transform) data pipeline** designed to automate daily stock analytics using modern data engineering tools.
+This lab implements a complete, production-oriented **ELT (Extract–Load–Transform) data pipeline** designed to automate daily stock analytics using modern data engineering tools.
 
 The pipeline performs:
 
@@ -16,7 +16,6 @@ This lab demonstrates enterprise-level orchestration, warehousing, transformatio
 ---
 
 ## 🧱 Architecture Diagram
-*(GitHub-native Mermaid — guaranteed to render)*
 
 ```mermaid
 flowchart LR
